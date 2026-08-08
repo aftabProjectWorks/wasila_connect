@@ -7,7 +7,9 @@ export async function createGroup({ name, slug, description, createdBy }: { name
   if (error) throw error;
 
   // Add creator as group member and lead
-  await supabase.from('group_members').insert([{ group_id: group.id, member_id: createdBy, role: 'lead' }]);
+  if (createdBy) {
+    await supabase.from('group_members').insert([{ group_id: group.id, member_id: createdBy, role: 'lead' }]);
+  }
 
   await auditLog(supabase, createdBy || null, 'group.create', 'group', group.id, null, group, {});
   return group;

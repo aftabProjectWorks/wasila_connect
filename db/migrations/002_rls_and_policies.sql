@@ -33,7 +33,7 @@ CREATE POLICY IF NOT EXISTS "select_cards_issued" ON cards
   FOR SELECT USING (issued_to = (SELECT id FROM members WHERE supabase_user_id = auth.uid()));
 
 -- Ledger accounts: only service role can write; members can select accounts they own
-CREATE POLICY IF NOT_EXISTS "select_ledger_accounts_owner" ON ledger_accounts
+CREATE POLICY IF NOT EXISTS "select_ledger_accounts_owner" ON ledger_accounts
   FOR SELECT USING (owner_id = (SELECT id FROM members WHERE supabase_user_id = auth.uid()));
 
 -- Transactions: only service role can insert; allow select for admins/service
