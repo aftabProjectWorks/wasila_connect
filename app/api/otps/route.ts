@@ -1,4 +1,4 @@
-import { createServiceSupabase } from '../../lib/supabaseClient';
+import { createServiceSupabase } from '../../../lib/supabaseClient';
 import { randomBytes } from 'crypto';
 
 export async function POST(request: Request) {

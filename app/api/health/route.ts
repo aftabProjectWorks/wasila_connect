@@ -1,4 +1,4 @@
-import { createServiceSupabase } from '../../lib/supabaseClient';
+import { createServiceSupabase } from '../../../lib/supabaseClient';
 
 export async function GET() {
   // Health check: if service role not configured, return lighter ok response

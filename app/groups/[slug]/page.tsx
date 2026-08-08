@@ -1,4 +1,4 @@
-import { createServiceSupabase } from '../../lib/supabaseClient';
+import { createServiceSupabase } from '../../../lib/supabaseClient';
 
 export default async function GroupPage({ params }: { params: { slug: string } }) {
   const supabase = createServiceSupabase();
