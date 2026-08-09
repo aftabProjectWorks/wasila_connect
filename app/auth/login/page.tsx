@@ -13,7 +13,35 @@ export default function LoginPage() {
 
   useEffect(() => {
     // handle OAuth redirect results if any
-    supabase.auth.getSession().then(() => {});
+    supabase.auth.getSession().then(async ({ data }) => {
+      const session = data?.session;
+      if (session) {
+        try {
+          await fetch('/api/auth/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ access_token: session.access_token }),
+          });
+        } catch (err) {
+          console.error('Error syncing auth:', err);
+        }
+      }
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.access_token) {
+        // send to server to create member record
+        fetch('/api/auth/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ access_token: session.access_token }),
+        }).catch((e) => console.error('sync error', e));
+      }
+    });
+
+    return () => {
+      listener?.subscription?.unsubscribe();
+    };
   }, []);
 
   async function signInWithGoogle() {

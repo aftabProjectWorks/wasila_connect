@@ -1,4 +1,4 @@
-# Wasila Connect
+# Wasila Connect Colab
 
 This branch contains the initial application scaffold for Wasila using Next.js (App Router), TypeScript, Tailwind CSS and Supabase (Postgres + Auth).
 

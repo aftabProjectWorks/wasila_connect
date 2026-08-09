@@ -1,5 +1,5 @@
-import { createServiceSupabase } from '../../lib/supabaseClient';
-import { MockProvider } from '../../services/payments/mockProvider';
+import { createServiceSupabase } from '../../../../lib/supabaseClient';
+import { MockProvider } from '../../../../services/payments/mockProvider';
 
 export async function POST(request: Request) {
   // Simple mock payment creation endpoint for development
