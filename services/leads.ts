@@ -309,7 +309,7 @@ export async function listTransitionHistory(
       .select('*')
       .eq('group_id', groupId)
       .eq('approved', true)
-      .isNotNull('effective_at')
+      .not('effective_at', 'is', null)
       .order('effective_at', { ascending: false })
       .limit(limit);
 

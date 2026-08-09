@@ -17,7 +17,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: String(userErr) }, { status: 500 });
     }
 
-    const user = userData?.data?.user || userData?.user; // compatibility
+    // Handle both response formats from Supabase
+    const user = userData?.user || (userData as any)?.data?.user;
     if (!user) {
       return NextResponse.json({ success: false, error: 'user not found' }, { status: 404 });
     }

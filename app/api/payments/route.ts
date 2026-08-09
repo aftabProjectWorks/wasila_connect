@@ -22,12 +22,14 @@ export async function POST(req: NextRequest) {
     // Process via provider - for admin-created transactions, we may not call provider. Still process via configured provider if requested
     const paymentResult = await payments.processPayment(provider, { amount, currency: 'INR', payer_member_id, payee_member_id, metadata: body?.metadata || {} });
 
-    if (paymentResult.success) {
+    if (paymentResult.success && txn.data) {
       await markTransactionSucceeded(txn.data.id, paymentResult.provider_reference, actor);
       return NextResponse.json({ success: true, data: { transaction: txn.data, provider_result: paymentResult } });
     }
 
-    await markTransactionSucceeded(txn.data.id, paymentResult.provider_reference, actor);
+    if (txn.data) {
+      await markTransactionSucceeded(txn.data.id, paymentResult.provider_reference, actor);
+    }
     return NextResponse.json({ success: false, error: 'Payment failed', data: { transaction: txn.data, provider_result: paymentResult } });
   } catch (err) {
     return NextResponse.json({ success: false, error: String(err) }, { status: 500 });

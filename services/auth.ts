@@ -1,6 +1,12 @@
-import { createServiceSupabase } from '../lib/supabaseClient';
+import { createServiceSupabase } from '@/lib/supabaseClient';
 
-export async function createOrGetMemberFromAuth(supabaseUser: { id: string; email?: string; user_metadata?: any }) {
+export interface AuthUser {
+  id: string;
+  email?: string;
+  user_metadata?: Record<string, any>;
+}
+
+export async function createOrGetMemberFromAuth(supabaseUser: AuthUser) {
   // supabaseUser.id is the auth.uid()
   const supabase = createServiceSupabase();
 
@@ -35,13 +41,20 @@ export async function getMemberById(memberId: string) {
 
 export async function isAdminFromAccessToken(accessToken: string | null | undefined) {
   if (!accessToken) return false;
-  const supabase = createServiceSupabase();
-  const { data: userData, error } = await supabase.auth.getUser(accessToken);
-  if (error) return false;
-  const user = userData?.data?.user || userData?.user;
-  if (!user) return false;
-  const member = await getMemberBySupabaseId(user.id);
-  return member?.role === 'admin';
+  try {
+    const supabase = createServiceSupabase();
+    const { data: userData, error } = await supabase.auth.getUser(accessToken);
+    if (error) return false;
+    
+    // Handle both response formats
+    const user = userData?.user || (userData as any)?.data?.user;
+    if (!user) return false;
+    
+    const member = await getMemberBySupabaseId(user.id);
+    return member?.role === 'admin';
+  } catch {
+    return false;
+  }
 }
 
 export async function isMemberAdmin(memberId: string) {

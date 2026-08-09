@@ -7,6 +7,11 @@ describe('transactions', () => {
     const res = await createTransaction(100, 'direct', null as any, null as any, null as any, 'mock', null as any, {});
     expect(res.success).toBe(true);
     const txn = res.data;
+    expect(txn).toBeDefined();
+    expect(txn?.id).toBeDefined();
+    expect(txn?.reference).toBeDefined();
+
+    if (!txn?.id || !txn?.reference) return;
 
     const mark = await markTransactionSucceeded(txn.id, 'mock_ref', null as any);
     expect(mark.success).toBe(true);

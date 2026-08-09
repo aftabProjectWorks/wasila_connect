@@ -2,9 +2,9 @@
  * Member Service - CRUD and business logic for members
  */
 
-import { createServiceRoleClient } from './server';
-import { auditLog } from '../audit';
-import type { Member, MemberProfile, ApiResponse } from '../types';
+import { createServiceRoleClient } from '@/lib/supabase/server';
+import { auditLog } from './audit';
+import type { Member, MemberProfile, ApiResponse } from '@/lib/types';
 
 export async function createMember(
   email: string,
