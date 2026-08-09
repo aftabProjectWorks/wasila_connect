@@ -1,20 +1,45 @@
-export default function AdminPage() {
+import React from 'react';
+
+async function fetchReport() {
+  const res = await fetch('/api/transactions/report');
+  if (!res.ok) return [];
+  const json = await res.json();
+  return json.data || [];
+}
+
+export default async function AdminPage() {
+  const report = await fetchReport();
+
   return (
-    <div>
-      <h2 className="text-xl font-semibold">Admin Dashboard</h2>
-      <p className="mt-2 text-sm text-gray-600">Manage members, groups, policies, and financials.</p>
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white p-4 rounded shadow">
-          <h3 className="font-medium">Members</h3>
-          <p className="mt-2 text-sm text-gray-500">View and manage registered members.</p>
-        </div>
-        <div className="bg-white p-4 rounded shadow">
-          <h3 className="font-medium">Groups</h3>
-          <p className="mt-2 text-sm text-gray-500">Create and manage groups and leads.</p>
-        </div>
-        <div className="bg-white p-4 rounded shadow">
-          <h3 className="font-medium">Financials</h3>
-          <p className="mt-2 text-sm text-gray-500">View ledger and transactions.</p>
+    <div className="max-w-6xl mx-auto">
+      <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
+      <div className="mt-6">
+        <h2 className="text-lg font-medium">Recent Transactions</h2>
+        <div className="mt-2 bg-white p-4 rounded shadow">
+          {report.length === 0 ? (
+            <p>No transactions found.</p>
+          ) : (
+            <table className="w-full text-sm table-fixed">
+              <thead>
+                <tr>
+                  <th className="w-1/3 text-left">Reference</th>
+                  <th className="w-1/6 text-left">Amount</th>
+                  <th className="w-1/6 text-left">Status</th>
+                  <th className="w-1/3 text-left">Created At</th>
+                </tr>
+              </thead>
+              <tbody>
+                {report.map((t: any) => (
+                  <tr key={t.id}>
+                    <td className="truncate">{t.reference}</td>
+                    <td>{t.amount} {t.currency}</td>
+                    <td>{t.status}</td>
+                    <td>{new Date(t.created_at).toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>
