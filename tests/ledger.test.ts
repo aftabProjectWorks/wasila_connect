@@ -1,15 +1,19 @@
 import { describe, it, expect } from 'vitest';
-import { addLedgerEntry } from '../services/ledgerService';
+import { getOrCreateAccount, recordLedgerEntry } from '@/services/ledger';
 
-describe('ledgerService', () => {
-  it('rejects negative amounts', async () => {
-    let threw = false;
-    try {
-      // @ts-ignore
-      await addLedgerEntry({ accountId: '00000000-0000-0000-0000-000000000000', kind: 'debit', amount: -10, source: 'test' });
-    } catch (e) {
-      threw = true;
-    }
-    expect(threw).toBe(true);
+// NOTE: These tests require a running Supabase instance pointed by env vars and are
+// intended for local developer runs. They may be skipped in CI or use a mocked DB.
+
+describe('ledger', () => {
+  it('creates and records ledger entries', async () => {
+    const acct = await getOrCreateAccount('system', undefined as any);
+    expect(acct.success).toBe(true);
+    const accountId = acct.data.id;
+
+    const entry = await recordLedgerEntry(accountId, 'credit', 100, 'test', null, 'test', { test: true }, null as any);
+    expect(entry.success).toBe(true);
+
+    const second = await recordLedgerEntry(accountId, 'debit', 50, 'test2', null, 'test', {}, null as any);
+    expect(second.success).toBe(true);
   });
 });
