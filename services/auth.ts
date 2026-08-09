@@ -18,3 +18,37 @@ export async function createOrGetMemberFromAuth(supabaseUser: { id: string; emai
   if (insertErr) throw insertErr;
   return inserted;
 }
+
+export async function getMemberBySupabaseId(supabaseUserId: string) {
+  const db = createServiceSupabase();
+  const { data, error } = await db.from('members').select('*').eq('supabase_user_id', supabaseUserId).limit(1).maybeSingle();
+  if (error) throw error;
+  return data || null;
+}
+
+export async function getMemberById(memberId: string) {
+  const db = createServiceSupabase();
+  const { data, error } = await db.from('members').select('*').eq('id', memberId).limit(1).maybeSingle();
+  if (error) throw error;
+  return data || null;
+}
+
+export async function isAdminFromAccessToken(accessToken: string | null | undefined) {
+  if (!accessToken) return false;
+  const supabase = createServiceSupabase();
+  const { data: userData, error } = await supabase.auth.getUser(accessToken);
+  if (error) return false;
+  const user = userData?.data?.user || userData?.user;
+  if (!user) return false;
+  const member = await getMemberBySupabaseId(user.id);
+  return member?.role === 'admin';
+}
+
+export async function isMemberAdmin(memberId: string) {
+  const db = createServiceSupabase();
+  const { data, error } = await db.from('members').select('role').eq('id', memberId).limit(1).maybeSingle();
+  if (error) throw error;
+  return data?.role === 'admin';
+}
+
+export default { createOrGetMemberFromAuth, getMemberBySupabaseId, getMemberById, isAdminFromAccessToken, isMemberAdmin };

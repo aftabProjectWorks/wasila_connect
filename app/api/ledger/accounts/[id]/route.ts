@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAccountEntries, recordLedgerEntry, getOrCreateAccount } from '@/services/ledger';
+import { getActorFromRequest } from '@/services/request';
+import { isMemberAdmin } from '@/services/auth';
 
 interface Params { params: { id: string } }
 
@@ -20,13 +22,18 @@ export async function GET(req: NextRequest, { params }: Params) {
 
 export async function POST(req: NextRequest, { params }: Params) {
   try {
+    const actor = await getActorFromRequest(req);
+    if (!actor) return NextResponse.json({ success: false, error: 'unauthenticated' }, { status: 401 });
+    const ok = await isMemberAdmin(actor);
+    if (!ok) return NextResponse.json({ success: false, error: 'forbidden' }, { status: 403 });
+
     // Create a ledger entry (admin operation)
     const accountId = params.id;
     const body = await req.json();
-    const { kind, amount, source, reference_id, reference_type, metadata, actor_id } = body;
+    const { kind, amount, source, reference_id, reference_type, metadata } = body;
     if (!kind || !amount) return NextResponse.json({ success: false, error: 'kind and amount required' }, { status: 400 });
 
-    const res = await recordLedgerEntry(accountId, kind, Number(amount), source || 'manual', reference_id, reference_type, metadata || {}, actor_id);
+    const res = await recordLedgerEntry(accountId, kind, Number(amount), source || 'manual', reference_id, reference_type, metadata || {}, actor);
     if (!res.success) return NextResponse.json({ success: false, error: res.error }, { status: 400 });
     return NextResponse.json({ success: true, data: res.data });
   } catch (err) {
@@ -36,6 +43,11 @@ export async function POST(req: NextRequest, { params }: Params) {
 
 export async function PUT(req: NextRequest, { params }: Params) {
   try {
+    const actor = await getActorFromRequest(req);
+    if (!actor) return NextResponse.json({ success: false, error: 'unauthenticated' }, { status: 401 });
+    const ok = await isMemberAdmin(actor);
+    if (!ok) return NextResponse.json({ success: false, error: 'forbidden' }, { status: 403 });
+
     // Return account info or create account if not exists
     const accountId = params.id;
     // support special keyword: create:member:<memberId> to create account by owner

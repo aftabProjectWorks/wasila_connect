@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createMember, listMembers } from '@/services/members';
+import { getActorFromRequest } from '@/services/request';
+import { isMemberAdmin } from '@/services/auth';
 
 export async function GET(req: NextRequest) {
   try {
@@ -18,6 +20,12 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const actor = await getActorFromRequest(req);
+    if (!actor) return NextResponse.json({ success: false, error: 'unauthenticated' }, { status: 401 });
+
+    const isAdmin = await isMemberAdmin(actor);
+    if (!isAdmin) return NextResponse.json({ success: false, error: 'forbidden' }, { status: 403 });
+
     const body = await req.json();
     const email = body?.email;
     if (!email) return NextResponse.json({ success: false, error: 'email required' }, { status: 400 });
