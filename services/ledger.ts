@@ -22,6 +22,7 @@ export interface LedgerEntry {
   amount: number;
   description: string;
   reference_id?: string;
+  reference_type?: string;
   category: string;
   metadata?: Record<string, any>;
   created_at: string;
@@ -76,7 +77,7 @@ export async function recordLedgerEntry(
   amount: number,
   description: string,
   referenceId?: string | null,
-  category?: string,
+  referenceType?: string,
   metadata?: Record<string, any>,
   actorId?: string
 ): Promise<ApiResponse<LedgerEntry>> {
@@ -110,7 +111,8 @@ export async function recordLedgerEntry(
         amount,
         description,
         reference_id: referenceId,
-        category: category || 'general',
+        reference_type: referenceType,
+        category: 'general',
         metadata: metadata || {},
       })
       .select()
@@ -156,5 +158,65 @@ export async function getAccountBalance(accountId: string): Promise<ApiResponse<
     return { success: true, data: data?.balance || 0 };
   } catch (err) {
     return { success: false, error: String(err) };
+  }
+}
+
+export async function getAccountEntries(
+  accountId: string,
+  limit: number = 100,
+  offset: number = 0
+): Promise<ApiResponse<LedgerEntry[]>> {
+  try {
+    const db = createServiceRoleClient();
+
+    const { data, error } = await db
+      .from('ledger_entries')
+      .select('*')
+      .eq('account_id', accountId)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data: data || [] };
+  } catch (err) {
+    return { success: false, error: String(err) };
+  }
+}
+
+export async function verifyAccountBalance(accountId: string): Promise<boolean> {
+  try {
+    const db = createServiceRoleClient();
+
+    const { data: entries } = await db
+      .from('ledger_entries')
+      .select('type, amount')
+      .eq('account_id', accountId);
+
+    if (!entries) return false;
+
+    // Calculate sum from entries
+    let calculatedBalance = 0;
+    for (const entry of entries) {
+      if (entry.type === 'credit') {
+        calculatedBalance += entry.amount;
+      } else {
+        calculatedBalance -= entry.amount;
+      }
+    }
+
+    // Compare with stored balance
+    const { data: account } = await db
+      .from('ledger_accounts')
+      .select('balance')
+      .eq('id', accountId)
+      .single();
+
+    return account?.balance === calculatedBalance;
+  } catch (err) {
+    console.error('Error verifying account balance:', err);
+    return false;
   }
 }
